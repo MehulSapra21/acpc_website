@@ -1,119 +1,112 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Terminal, Code2, ExternalLink, Calendar as CalendarIcon } from "lucide-react";
+import { Terminal, ShieldAlert, Code, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-type POTD = {
-  id: string;
-  problem_title: string;
-  problem_url: string;
-  difficulty: string;
-  date_posted: string;
-};
-
-export default function LeetCodePage() {
-  const [problem, setProblem] = useState<POTD | null>(null);
+export default function LeetcodePage() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchPOTD();
+    if (sessionStorage.getItem("acpc_role") === "admin") {
+      setIsAdmin(true);
+    }
+    fetchQuestions();
   }, []);
 
-  const fetchPOTD = async () => {
-    // Fetch the most recent problem
-    const { data, error } = await supabase
-      .from("leetcode_potd")
-      .select("*")
-      .order("date_posted", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (data) {
-      setProblem(data);
-    } else {
-      // Fallback if database is empty
-      setProblem({
-        id: "fallback",
-        problem_title: "Two Sum",
-        problem_url: "https://leetcode.com/problems/two-sum/",
-        difficulty: "Easy",
-        date_posted: new Date().toISOString().split('T')[0],
-      });
+  const fetchQuestions = async () => {
+    // IMPORTANT: Change "leetcode" to whatever you named your table in Supabase
+    const { data, error } = await supabase.from("leetcode").select("*").order("created_at", { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching questions:", error);
     }
+    
+    // Safely set questions, defaulting to an empty array if data is null to prevent crashes
+    setQuestions(data || []);
     setLoading(false);
-  };
-
-  const getDifficultyColor = (diff: string) => {
-    switch (diff.toLowerCase()) {
-      case "easy": return "text-green-400 bg-green-400/10 border-green-400/20";
-      case "medium": return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
-      case "hard": return "text-red-400 bg-red-400/10 border-red-400/20";
-      default: return "text-gray-400 bg-gray-400/10 border-gray-400/20";
-    }
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30 pb-20">
-      <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2">
+      
+      {/* UNIVERSAL NAVIGATION BAR */}
+      <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50 bg-[#0a0a0a]/80">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center relative">
+          <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2 z-10">
             <Terminal className="text-blue-500" size={24} />
             <span>ACPC.</span>
           </Link>
+          
+          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <Link href="/#timeline" className="hover:text-white transition-colors">Timeline</Link>
+            <Link href="/gallery" className="hover:text-white transition-colors">Crew & Gallery</Link>
+            <Link href="/leetcode" className="text-white transition-colors">POTD</Link>
+            {isAdmin && (
+              <Link href="/admin" className="hover:text-red-400 transition-colors text-red-500">Admin Panel</Link>
+            )}
+          </div>
+
+          <div className="hidden md:flex z-10">
+            <Link href="/recruitment" className="hover:text-blue-400 transition-colors text-blue-500 font-medium">Join Us</Link>
+          </div>
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-6 mt-20">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 flex items-center justify-center gap-4">
-            <Code2 size={40} className="text-blue-500" />
-            Problem of the Day
-          </h1>
-          <p className="text-gray-400">Sharpen your algorithmic thinking. Solve the daily challenge.</p>
+      <main className="max-w-4xl mx-auto px-6 mt-16">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm mb-6">
+            <Code size={16} /> Problem of the Day
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Daily Grind</h1>
+          <p className="text-gray-400">Consistent execution builds algorithmic dominance. Solve the daily challenge.</p>
         </div>
 
         {loading ? (
-          <div className="text-center text-gray-500">Loading today's challenge...</div>
-        ) : problem ? (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            className="bg-black border border-gray-800 p-8 rounded-xl shadow-2xl relative overflow-hidden"
-          >
-            {/* Decorative background element */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl"></div>
-
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                  <CalendarIcon size={16} />
-                  <span>{problem.date_posted}</span>
+          <div className="text-center text-gray-500 mt-20">Loading questions...</div>
+        ) : (
+          <div className="space-y-4">
+            {questions.length === 0 ? (
+              <div className="text-center bg-gray-900/30 border border-gray-800 rounded-xl p-12 text-gray-500">
+                No challenges posted yet. Check back soon.
+              </div>
+            ) : (
+              questions.map((q) => (
+                <div key={q.id} className="bg-black border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">{q.title}</h3>
+                    {/* Assuming you have a difficulty column. If not, you can remove this span. */}
+                    {q.difficulty && (
+                      <span className={`text-xs px-2 py-1 rounded-md ${
+                        q.difficulty.toLowerCase() === 'easy' ? 'bg-green-500/20 text-green-400' :
+                        q.difficulty.toLowerCase() === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-red-500/20 text-red-400'
+                      }`}>
+                        {q.difficulty}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Assuming you have a url/link column for the LeetCode URL */}
+                  {q.url && (
+                    <a 
+                      href={q.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
+                    >
+                      Solve Problem <ExternalLink size={16} />
+                    </a>
+                  )}
                 </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getDifficultyColor(problem.difficulty)}`}>
-                  {problem.difficulty}
-                </span>
-              </div>
-
-              <h2 className="text-3xl font-bold mb-6">{problem.problem_title}</h2>
-              
-              <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-lg mb-8 text-gray-400 text-sm">
-                <p>ACPC expects all core and technical members to solve the daily problem. Consistency is the key to dominating the leaderboards.</p>
-              </div>
-
-              <a 
-                href={problem.problem_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
-              >
-                Solve on LeetCode <ExternalLink size={18} />
-              </a>
-            </div>
-          </motion.div>
-        ) : null}
+              ))
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
