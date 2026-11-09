@@ -73,43 +73,48 @@ export default function GalleryPage() {
   const secretary = executives.find((m) => m.role.includes("Secretary"));
   const treasurer = executives.find((m) => m.role.includes("Treasurer"));
 
-  // Catch any other Core members that don't match the specific 5 titles above
   const knownExecIds = [president?.id, vpMale?.id, vpFemale?.id, secretary?.id, treasurer?.id].filter(Boolean);
   const otherExecutives = executives.filter((m) => !knownExecIds.includes(m.id));
 
   const otherTeams = ["Technical", "Designing", "Marketing", "Contests & Management", "Stats & Treasury", "Social Media"];
 
-  // --- Reusable Executive Card Component ---
-  const renderExecutiveCard = (exec: Member | undefined) => {
-    if (!exec) return null;
+  // --- Reusable Universal Member Card Component ---
+  const renderMemberCard = (member: Member | undefined, isHead: boolean = false) => {
+    if (!member) return null;
+    
+    // Core executives and Team Heads get a subtle blue accent border
+    const isHighlighted = isHead || member.team === "Core";
+    
     return (
-      <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden text-center hover:border-blue-500/50 transition-colors flex flex-col w-full sm:w-56">
-        <div className="w-full aspect-square bg-gray-800 relative overflow-hidden">
-          {exec.crop_area_width ? (
+      <div key={member.id} className={`bg-black border ${isHighlighted ? 'border-blue-500/40' : 'border-gray-800'} rounded-xl overflow-hidden text-center hover:border-blue-500/60 transition-colors flex flex-col w-[45%] sm:w-48 md:w-52 lg:w-56`}>
+        <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800 overflow-hidden">
+          {member.crop_area_width ? (
             <img 
-              src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
-              alt={exec.name} 
+              src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
+              alt={member.name} 
               className="absolute max-w-none"
               style={{
-                width: `${(100 / exec.crop_area_width) * 100}%`,
-                height: `${(100 / (exec.crop_area_height || 100)) * 100}%`,
-                left: `-${((exec.crop_area_x || 0) / exec.crop_area_width) * 100}%`,
-                top: `-${((exec.crop_area_y || 0) / (exec.crop_area_height || 100)) * 100}%`
+                width: `${(100 / member.crop_area_width) * 100}%`,
+                height: `${(100 / (member.crop_area_height || 100)) * 100}%`,
+                left: `-${((member.crop_area_x || 0) / member.crop_area_width) * 100}%`,
+                top: `-${((member.crop_area_y || 0) / (member.crop_area_height || 100)) * 100}%`
               }}
               onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
             />
           ) : (
             <img 
-              src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
-              alt={exec.name} 
+              src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
+              alt={member.name} 
               className="w-full h-full absolute inset-0 object-cover"
               onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
             />
           )}
         </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-sm">{exec.name}</h3>
-          <p className="text-xs text-blue-400 mt-1">{exec.role.replace("Executive ", "")}</p>
+        <div className="p-3">
+          <h3 className="font-semibold text-sm">{member.name}</h3>
+          <p className={`text-xs mt-1 ${isHighlighted ? 'text-blue-400' : 'text-gray-500'}`}>
+            {member.role.replace("Executive ", "")}
+          </p>
         </div>
       </div>
     );
@@ -158,31 +163,27 @@ export default function GalleryPage() {
         </div>
 
         {/* Board of Executives Layout */}
-        <div className="mb-16">
+        <div className="mb-20">
           <h2 className="text-2xl font-bold mb-8 border-b border-gray-800 pb-2">Board of Executives</h2>
           
           <div className="flex flex-col items-center gap-6">
-            {/* Row 1: President */}
             <div className="flex justify-center w-full">
-              {renderExecutiveCard(president)}
+              {renderMemberCard(president, true)}
             </div>
 
-            {/* Row 2: Vice Presidents */}
-            <div className="flex flex-col sm:flex-row justify-center gap-6 w-full">
-              {renderExecutiveCard(vpMale)}
-              {renderExecutiveCard(vpFemale)}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 w-full">
+              {renderMemberCard(vpMale, true)}
+              {renderMemberCard(vpFemale, true)}
             </div>
 
-            {/* Row 3: Secretary & Treasurer */}
-            <div className="flex flex-col sm:flex-row justify-center gap-6 w-full">
-              {renderExecutiveCard(secretary)}
-              {renderExecutiveCard(treasurer)}
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 w-full">
+              {renderMemberCard(secretary, true)}
+              {renderMemberCard(treasurer, true)}
             </div>
 
-            {/* Fallback for any other Core members */}
             {otherExecutives.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-6 w-full mt-6">
-                {otherExecutives.map(exec => renderExecutiveCard(exec))}
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6 w-full mt-2">
+                {otherExecutives.map(exec => renderMemberCard(exec, true))}
               </div>
             )}
           </div>
@@ -193,41 +194,27 @@ export default function GalleryPage() {
           const teamMembers = members.filter((m) => m.team === teamName);
           if (teamMembers.length === 0) return null;
           
+          const head = teamMembers.find(m => m.role.toLowerCase().includes('head'));
+          const restOfTeam = teamMembers.filter(m => m.id !== head?.id);
+          
           return (
-            <div key={teamName} className="mb-12">
-              <h2 className="text-xl font-bold mb-6 text-gray-300">{teamName} Team</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
-                    <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800 overflow-hidden">
-                      {member.crop_area_width ? (
-                        <img 
-                          src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
-                          alt={member.name} 
-                          className="absolute max-w-none"
-                          style={{
-                            width: `${(100 / member.crop_area_width) * 100}%`,
-                            height: `${(100 / (member.crop_area_height || 100)) * 100}%`,
-                            left: `-${((member.crop_area_x || 0) / member.crop_area_width) * 100}%`,
-                            top: `-${((member.crop_area_y || 0) / (member.crop_area_height || 100)) * 100}%`
-                          }}
-                          onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-                        />
-                      ) : (
-                        <img 
-                          src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
-                          alt={member.name} 
-                          className="w-full h-full absolute inset-0 object-cover"
-                          onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-                        />
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold text-sm">{member.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{member.role}</p>
-                    </div>
+            <div key={teamName} className="mb-16">
+              <h2 className="text-2xl font-bold mb-8 border-b border-gray-800 pb-2 text-gray-300">{teamName} Team</h2>
+              
+              <div className="flex flex-col items-center gap-6">
+                {/* Team Head (Centered) */}
+                {head && (
+                  <div className="flex justify-center w-full">
+                    {renderMemberCard(head, true)}
                   </div>
-                ))}
+                )}
+                
+                {/* Team Members (Flex Wrap, centers leftover cards on last row automatically) */}
+                {restOfTeam.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4 md:gap-6 w-full">
+                    {restOfTeam.map((member) => renderMemberCard(member))}
+                  </div>
+                )}
               </div>
             </div>
           );
