@@ -11,7 +11,7 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // --- TIMELINE STATE ---
+  // Timeline State
   const [events, setEvents] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -19,13 +19,12 @@ export default function AdminPage() {
   const [externalLink, setExternalLink] = useState("");
   const [isPast, setIsPast] = useState(false);
 
-  // --- CROPPER STATE ---
+  // Cropper State
   const [members, setMembers] = useState<any[]>([]);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [croppedAreaPercent, setCroppedAreaPercent] = useState<any>(null); // NEW: Stores exact percentages
 
   useEffect(() => {
     if (sessionStorage.getItem("acpc_role") === "admin") {
@@ -37,18 +36,19 @@ export default function AdminPage() {
     }
   }, []);
 
-  // ==========================================
-  // TIMELINE MANAGEMENT LOGIC
-  // ==========================================
   const fetchEvents = async () => {
     const { data } = await supabase.from("events").select("*").order("event_date", { ascending: false });
     if (data) setEvents(data);
     setLoading(false);
   };
 
+  const fetchMembers = async () => {
+    const { data } = await supabase.from("members").select("*");
+    if (data) setMembers(data);
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     const payload = {
       title, 
       event_date: date, 
@@ -92,14 +92,6 @@ export default function AdminPage() {
     }
   };
 
-  // ==========================================
-  // PROFILE IMAGE ALIGNMENT LOGIC
-  // ==========================================
-  const fetchMembers = async () => {
-    const { data } = await supabase.from("members").select("*");
-    if (data) setMembers(data);
-  };
-
   const getFormattedImageName = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '_');
   };
@@ -110,23 +102,20 @@ export default function AdminPage() {
       setSelectedMember(member);
       setImageSrc(`/crew/${getFormattedImageName(member.name)}.jpeg`);
       
-      // Reset cropper UI visually
-      setCrop({ x: 0, y: 0 }); 
+      setCrop({ 
+        x: member.crop_x ? (50 - member.crop_x) * zoom * -1 : 0, 
+        y: member.crop_y ? (50 - member.crop_y) * zoom * -1 : 0 
+      });
       setZoom(member.crop_zoom || 1);
     }
   };
 
-  // NEW: Capture the exact boundary percentages from the library
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPercent(croppedArea);
-  }, []);
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {}, []);
 
-  // NEW: Calculate true center mathematically for CSS
   const handleSaveCrop = async () => {
     if (!selectedMember) return;
 
-    // Correct mathematical conversion from cropper pixels to CSS percentages
-    // We assume a base 50% (center) and subtract the offset based on zoom
+    // Fixed math for accurate object-position mapping
     const percentageX = 50 - (crop.x / zoom);
     const percentageY = 50 - (crop.y / zoom);
 
@@ -140,16 +129,13 @@ export default function AdminPage() {
       .eq("id", selectedMember.id);
 
     if (!error) {
-      alert("Crop settings saved successfully!");
-      fetchMembers(); // Refresh data
+      alert("Crop settings saved! Go to the Gallery tab to see the update.");
+      fetchMembers();
     } else {
       alert("Error saving crop settings.");
     }
   };
 
-  // ==========================================
-  // RENDER
-  // ==========================================
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Verifying credentials...</div>;
 
   if (!isAdmin) {
@@ -174,7 +160,7 @@ export default function AdminPage() {
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
         
-        {/* SECTION 1: TIMELINE MANAGEMENT */}
+        {/* Timeline Management Section */}
         <section>
           <h1 className="text-3xl font-bold mb-8">Timeline Management</h1>
 
@@ -246,7 +232,7 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* SECTION 2: PROFILE IMAGE ALIGNMENT */}
+        {/* Profile Image Alignment Section */}
         <section>
           <h1 className="text-3xl font-bold mb-8 border-t border-gray-800 pt-12">Profile Image Alignment</h1>
 

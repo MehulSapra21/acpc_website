@@ -6,7 +6,6 @@ import { Terminal, ShieldAlert, Plus, Award } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-// 1. Updated Type to include crop data
 type Member = {
   id: string;
   name: string;
@@ -28,18 +27,17 @@ export default function GalleryPage() {
       setIsAdmin(true);
     }
     
-    // Create an interval to poll for fresh data if they just came from the admin panel
+    // Fetch initial data
     fetchMembers();
     
-    const refreshData = () => {
-      fetchMembers();
-    };
-
-    // Add an event listener so it refreshes when they switch back to this tab
+    // Auto-refresh when coming back to the tab
+    const refreshData = () => fetchMembers();
     window.addEventListener("focus", refreshData);
     
+    // Proper cleanup to fix your Vercel error
     return () => {
       window.removeEventListener("focus", refreshData);
+    };
   }, []);
 
   const fetchMembers = async () => {
@@ -80,7 +78,6 @@ export default function GalleryPage() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-6 mt-12">
-        {/* Admin Gamified Leaderboard */}
         {isAdmin && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-20 bg-gray-900/50 border border-green-500/30 rounded-xl p-8">
             <div className="flex items-center gap-2 mb-6">
@@ -106,13 +103,11 @@ export default function GalleryPage() {
           </motion.div>
         )}
 
-        {/* The Crew Section */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">The Crew</h1>
           <p className="text-gray-400">The minds executing brilliance behind ACPC.</p>
         </div>
 
-        {/* Executives */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold mb-8 border-b border-gray-800 pb-2">Board of Executives</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -139,7 +134,6 @@ export default function GalleryPage() {
           </div>
         </div>
 
-        {/* Teams */}
         {otherTeams.map((teamName) => {
           const teamMembers = members.filter((m) => m.team === teamName);
           if (teamMembers.length === 0) return null;
@@ -151,7 +145,6 @@ export default function GalleryPage() {
                 {teamMembers.map((member) => (
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
                     <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800">
-                      {/* 2. Fixed variable name from 'exec' to 'member' here */}
                       <img 
                         src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
                         alt={member.name} 
