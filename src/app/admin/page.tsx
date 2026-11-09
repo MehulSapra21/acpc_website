@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Terminal, ShieldAlert, Plus, Trash2, Home } from "lucide-react";
+import { ShieldAlert, Plus, Trash2, Home, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -14,6 +14,7 @@ export default function AdminPage() {
   // Form State
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [externalLink, setExternalLink] = useState("");
   const [isPast, setIsPast] = useState(false);
 
   useEffect(() => {
@@ -33,11 +34,17 @@ export default function AdminPage() {
 
   const handleAddEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("events").insert([{ title, event_date: date, is_past_event: isPast }]);
+    const { error } = await supabase.from("events").insert([{ 
+      title, 
+      event_date: date, 
+      is_past_event: isPast,
+      external_link: externalLink.trim() === "" ? null : externalLink.trim()
+    }]);
     
     if (!error) {
       setTitle("");
       setDate("");
+      setExternalLink("");
       setIsPast(false);
       fetchEvents(); // Refresh the list
     }
@@ -76,26 +83,34 @@ export default function AdminPage() {
         {/* Add Event Form */}
         <motion.form 
           onSubmit={handleAddEvent}
-          className="bg-gray-900/50 border border-gray-800 p-6 rounded-xl mb-12 flex flex-col md:flex-row gap-4 items-end"
+          className="bg-gray-900/50 border border-gray-800 p-6 rounded-xl mb-12 flex flex-col gap-4"
         >
-          <div className="flex-1 w-full space-y-2">
-            <label className="text-xs text-gray-400">Operation Title</label>
-            <input required type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-red-500" placeholder="e.g., Cyber Cup 6.0" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400">Operation Title</label>
+              <input required type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-red-500" placeholder="e.g., Cyber Cup 6.0" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs text-gray-400">External Link (Optional)</label>
+              <input type="url" value={externalLink} onChange={(e) => setExternalLink(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-red-500" placeholder="https://..." />
+            </div>
           </div>
           
-          <div className="w-full md:w-48 space-y-2">
-            <label className="text-xs text-gray-400">Date</label>
-            <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-red-500" />
-          </div>
+          <div className="flex flex-col md:flex-row gap-4 items-end w-full mt-2">
+            <div className="w-full md:w-48 space-y-2">
+              <label className="text-xs text-gray-400">Date</label>
+              <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-black border border-gray-700 rounded-lg px-4 py-2 outline-none focus:border-red-500" />
+            </div>
 
-          <div className="flex items-center gap-2 mb-2">
-            <input type="checkbox" id="past" checked={isPast} onChange={(e) => setIsPast(e.target.checked)} className="accent-red-500 w-4 h-4" />
-            <label htmlFor="past" className="text-sm">Past Event?</label>
-          </div>
+            <div className="flex items-center gap-2 mb-2 flex-1">
+              <input type="checkbox" id="past" checked={isPast} onChange={(e) => setIsPast(e.target.checked)} className="accent-red-500 w-4 h-4" />
+              <label htmlFor="past" className="text-sm">Past Event?</label>
+            </div>
 
-          <button type="submit" className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors">
-            <Plus size={18} /> Add
-          </button>
+            <button type="submit" className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors">
+              <Plus size={18} /> Add
+            </button>
+          </div>
         </motion.form>
 
         {/* Event List */}
@@ -104,7 +119,10 @@ export default function AdminPage() {
           {events.map((event) => (
             <div key={event.id} className="flex justify-between items-center bg-black border border-gray-800 p-4 rounded-lg">
               <div>
-                <h3 className="font-semibold">{event.title}</h3>
+                <h3 className="font-semibold flex items-center gap-2">
+                  {event.title} 
+                  {event.external_link && <LinkIcon size={14} className="text-blue-500" />}
+                </h3>
                 <p className="text-xs text-gray-500">{event.event_date} • {event.is_past_event ? 'Past' : 'Upcoming'}</p>
               </div>
               <button onClick={() => handleDeleteEvent(event.id)} className="text-gray-500 hover:text-red-500 transition-colors">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Terminal, Calendar, ChevronRight } from "lucide-react";
+import { Terminal, Calendar, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -11,6 +11,7 @@ type Event = {
   title: string;
   event_date: string;
   is_past_event: boolean;
+  external_link?: string;
 };
 
 export default function Home() {
@@ -18,7 +19,6 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user has admin privileges
     if (sessionStorage.getItem("acpc_role") === "admin") {
       setIsAdmin(true);
     }
@@ -39,7 +39,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30">
       
-      {/* Centered Navigation Bar */}
       <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2">
@@ -47,7 +46,6 @@ export default function Home() {
             <span>ACPC.</span>
           </Link>
           
-          {/* Centered Links */}
           <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
             <Link href="#timeline" className="hover:text-white transition-colors">Timeline</Link>
             <Link href="/gallery" className="hover:text-white transition-colors">Crew & Gallery</Link>
@@ -63,7 +61,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <main className="max-w-6xl mx-auto px-6 py-24">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -98,7 +95,6 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Dynamic Timeline Section */}
         <div id="timeline" className="mt-40 pt-20 border-t border-gray-800/50">
           <motion.div 
             initial={{ opacity: 0 }}
@@ -132,9 +128,21 @@ export default function Home() {
                           {!event.is_past_event ? 'Upcoming' : 'Past'}
                         </span>
                       </div>
-                      <p className="text-gray-500 text-sm flex items-center gap-2">
+                      <p className={`text-gray-500 text-sm flex items-center gap-2 ${event.external_link ? 'mb-5' : ''}`}>
                         <Calendar size={14} /> {event.event_date}
                       </p>
+                      
+                      {/* Conditional Visit Button */}
+                      {event.external_link && (
+                        <a 
+                          href={event.external_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-2 text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors border border-gray-700"
+                        >
+                          Visit Official Site <ExternalLink size={14} />
+                        </a>
+                      )}
                     </div>
                   </motion.div>
                 ))
