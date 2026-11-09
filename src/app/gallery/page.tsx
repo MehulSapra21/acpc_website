@@ -41,7 +41,6 @@ export default function GalleryPage() {
     await supabase.from("members").update({ points: currentPoints + 10 }).eq("id", id);
   };
 
-  // Helper function to convert "Pranav Gupta" to "pranav_gupta"
   const getFormattedImageName = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '_');
   };
@@ -102,17 +101,19 @@ export default function GalleryPage() {
           <h2 className="text-2xl font-bold mb-8 border-b border-gray-800 pb-2">Board of Executives</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {executives.map((exec) => (
-              <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
-                <div className="w-24 h-24 bg-gray-800 mx-auto mb-4 rounded-lg overflow-hidden border border-gray-700 relative">
+              <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden text-center hover:border-blue-500/50 transition-colors flex flex-col">
+                <div className="w-full aspect-square bg-gray-800 relative">
                   <img 
                     src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
                     alt={exec.name} 
                     className="w-full h-full object-cover absolute inset-0"
-                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} // Hides broken image icon if no image exists
+                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
                   />
                 </div>
-                <h3 className="font-semibold text-sm">{exec.name}</h3>
-                <p className="text-xs text-blue-400 mt-1">{exec.role.replace("Executive ", "")}</p>
+                <div className="p-4">
+                  <h3 className="font-semibold text-sm">{exec.name}</h3>
+                  <p className="text-xs text-blue-400 mt-1">{exec.role.replace("Executive ", "")}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -128,8 +129,8 @@ export default function GalleryPage() {
               <h2 className="text-xl font-bold mb-6 text-gray-300">{teamName} Team</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {teamMembers.map((member) => (
-                  <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-lg p-4 text-center`}>
-                    <div className="w-20 h-20 bg-gray-900 mx-auto mb-3 rounded-lg overflow-hidden border border-gray-800 relative">
+                  <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
+                    <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800">
                       <img 
                         src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
                         alt={member.name} 
@@ -137,8 +138,10 @@ export default function GalleryPage() {
                         onError={(e) => { e.currentTarget.style.opacity = '0'; }}
                       />
                     </div>
-                    <h3 className="font-semibold text-sm">{member.name}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{member.role}</p>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-sm">{member.name}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{member.role}</p>
+                    </div>
                   </div>
                 ))}
               </div>
