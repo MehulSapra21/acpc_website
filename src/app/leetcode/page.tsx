@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Terminal, ShieldAlert, Code, ExternalLink } from "lucide-react";
+import { Terminal, Code, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -18,14 +18,13 @@ export default function LeetcodePage() {
   }, []);
 
   const fetchQuestions = async () => {
-    // IMPORTANT: Change "leetcode" to whatever you named your table in Supabase
-    const { data, error } = await supabase.from("leetcode").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("leetcode_potd")
+      .select("*")
+      .order("created_at", { ascending: false });
     
-    if (error) {
-      console.error("Error fetching questions:", error);
-    }
+    if (error) console.error("Error fetching questions:", error);
     
-    // Safely set questions, defaulting to an empty array if data is null to prevent crashes
     setQuestions(data || []);
     setLoading(false);
   };
@@ -33,7 +32,6 @@ export default function LeetcodePage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30 pb-20">
       
-      {/* UNIVERSAL NAVIGATION BAR */}
       <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50 bg-[#0a0a0a]/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center relative">
           <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2 z-10">
@@ -67,7 +65,7 @@ export default function LeetcodePage() {
         </div>
 
         {loading ? (
-          <div className="text-center text-gray-500 mt-20">Loading questions...</div>
+          <div className="text-center text-gray-500 mt-20">Fetching algorithms...</div>
         ) : (
           <div className="space-y-4">
             {questions.length === 0 ? (
@@ -78,28 +76,29 @@ export default function LeetcodePage() {
               questions.map((q) => (
                 <div key={q.id} className="bg-black border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-1">{q.title}</h3>
-                    {/* Assuming you have a difficulty column. If not, you can remove this span. */}
-                    {q.difficulty && (
+                    <h3 className="text-lg font-semibold mb-1">
+                      #{q.question_id} - {q.problem_title}
+                    </h3>
+                    <div className="flex gap-3 items-center mt-2">
                       <span className={`text-xs px-2 py-1 rounded-md ${
-                        q.difficulty.toLowerCase() === 'easy' ? 'bg-green-500/20 text-green-400' :
-                        q.difficulty.toLowerCase() === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                        q.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
+                        q.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-red-500/20 text-red-400'
                       }`}>
                         {q.difficulty}
                       </span>
-                    )}
+                      <span className="text-xs text-gray-500">{q.date_posted}</span>
+                    </div>
                   </div>
                   
-                  {/* Assuming you have a url/link column for the LeetCode URL */}
-                  {q.url && (
+                  {q.problem_url && (
                     <a 
-                      href={q.url} 
+                      href={q.problem_url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm whitespace-nowrap mt-4 md:mt-0"
                     >
-                      Solve Problem <ExternalLink size={16} />
+                      Solve on LeetCode <ExternalLink size={16} />
                     </a>
                   )}
                 </div>
