@@ -105,7 +105,7 @@ export default function GalleryPage() {
               <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
                 <div className="w-24 h-24 bg-gray-800 mx-auto mb-4 rounded-lg overflow-hidden border border-gray-700 relative">
                   <img 
-                    src={`/crew/${getFormattedImageName(exec.name)}.jpg`} 
+                    src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
                     alt={exec.name} 
                     className="w-full h-full object-cover absolute inset-0"
                     onError={(e) => { e.currentTarget.style.opacity = '0'; }} // Hides broken image icon if no image exists
@@ -131,7 +131,7 @@ export default function GalleryPage() {
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-lg p-4 text-center`}>
                     <div className="w-20 h-20 bg-gray-900 mx-auto mb-3 rounded-lg overflow-hidden border border-gray-800 relative">
                       <img 
-                        src={`/crew/${getFormattedImageName(member.name)}.jpg`} 
+                        src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
                         alt={member.name} 
                         className="w-full h-full object-cover absolute inset-0"
                         onError={(e) => { e.currentTarget.style.opacity = '0'; }}
