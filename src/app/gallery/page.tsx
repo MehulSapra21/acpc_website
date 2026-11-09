@@ -27,7 +27,19 @@ export default function GalleryPage() {
     if (sessionStorage.getItem("acpc_role") === "admin") {
       setIsAdmin(true);
     }
+    
+    // Create an interval to poll for fresh data if they just came from the admin panel
     fetchMembers();
+    
+    const refreshData = () => {
+      fetchMembers();
+    };
+
+    // Add an event listener so it refreshes when they switch back to this tab
+    window.addEventListener("focus", refreshData);
+    
+    return () => {
+      window.removeEventListener("focus", refreshData);
   }, []);
 
   const fetchMembers = async () => {

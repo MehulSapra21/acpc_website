@@ -123,24 +123,25 @@ export default function AdminPage() {
 
   // NEW: Calculate true center mathematically for CSS
   const handleSaveCrop = async () => {
-    if (!selectedMember || !croppedAreaPercent) return;
+    if (!selectedMember) return;
 
-    // Calculate the exact center point of the cropped area as a percentage
-    const centerX = croppedAreaPercent.x + (croppedAreaPercent.width / 2);
-    const centerY = croppedAreaPercent.y + (croppedAreaPercent.height / 2);
+    // Correct mathematical conversion from cropper pixels to CSS percentages
+    // We assume a base 50% (center) and subtract the offset based on zoom
+    const percentageX = 50 - (crop.x / zoom);
+    const percentageY = 50 - (crop.y / zoom);
 
     const { error } = await supabase
       .from("members")
       .update({ 
-        crop_x: centerX, 
-        crop_y: centerY, 
+        crop_x: percentageX, 
+        crop_y: percentageY, 
         crop_zoom: zoom 
       })
       .eq("id", selectedMember.id);
 
     if (!error) {
       alert("Crop settings saved successfully!");
-      fetchMembers();
+      fetchMembers(); // Refresh data
     } else {
       alert("Error saving crop settings.");
     }
