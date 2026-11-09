@@ -131,6 +131,8 @@ export default function GalleryPage() {
           </Link>
           
           <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
+            {/* Added Home Link Here */}
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/#timeline" className="hover:text-white transition-colors">Timeline</Link>
             <Link href="/gallery" className="text-white transition-colors">Crew & Gallery</Link>
             <Link href="/leetcode" className="hover:text-white transition-colors">POTD</Link>
