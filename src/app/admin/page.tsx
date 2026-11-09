@@ -25,6 +25,7 @@ export default function AdminPage() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedAreaPercent, setCroppedAreaPercent] = useState<any>(null); // NEW: Stores exact percentages
 
   useEffect(() => {
     if (sessionStorage.getItem("acpc_role") === "admin") {
@@ -109,27 +110,30 @@ export default function AdminPage() {
       setSelectedMember(member);
       setImageSrc(`/crew/${getFormattedImageName(member.name)}.jpeg`);
       
-      setCrop({ 
-        x: member.crop_x ? (member.crop_x - 50) * 10 : 0, 
-        y: member.crop_y ? (member.crop_y - 50) * 10 : 0 
-      });
+      // Reset cropper UI visually
+      setCrop({ x: 0, y: 0 }); 
       setZoom(member.crop_zoom || 1);
     }
   };
 
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {}, []);
+  // NEW: Capture the exact boundary percentages from the library
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPercent(croppedArea);
+  }, []);
 
+  // NEW: Calculate true center mathematically for CSS
   const handleSaveCrop = async () => {
-    if (!selectedMember) return;
+    if (!selectedMember || !croppedAreaPercent) return;
 
-    const percentageX = 50 + (crop.x / (10 * zoom));
-    const percentageY = 50 + (crop.y / (10 * zoom));
+    // Calculate the exact center point of the cropped area as a percentage
+    const centerX = croppedAreaPercent.x + (croppedAreaPercent.width / 2);
+    const centerY = croppedAreaPercent.y + (croppedAreaPercent.height / 2);
 
     const { error } = await supabase
       .from("members")
       .update({ 
-        crop_x: percentageX, 
-        crop_y: percentageY, 
+        crop_x: centerX, 
+        crop_y: centerY, 
         crop_zoom: zoom 
       })
       .eq("id", selectedMember.id);
