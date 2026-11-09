@@ -20,7 +20,6 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if the user authenticated through the terminal
     if (sessionStorage.getItem("acpc_role") === "admin") {
       setIsAdmin(true);
     }
@@ -36,12 +35,15 @@ export default function GalleryPage() {
   };
 
   const addPoint = async (id: string, currentPoints: number) => {
-    // Optimistic UI update
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, points: currentPoints + 10 } : m))
     );
-    // Update Database
     await supabase.from("members").update({ points: currentPoints + 10 }).eq("id", id);
+  };
+
+  // Helper function to convert "Pranav Gupta" to "pranav_gupta"
+  const getFormattedImageName = (name: string) => {
+    return name.toLowerCase().replace(/\s+/g, '_');
   };
 
   if (loading) {
@@ -101,7 +103,14 @@ export default function GalleryPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {executives.map((exec) => (
               <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
-                <div className="w-16 h-16 bg-gray-800 rounded-full mx-auto mb-4"></div>
+                <div className="w-24 h-24 bg-gray-800 mx-auto mb-4 rounded-lg overflow-hidden border border-gray-700 relative">
+                  <img 
+                    src={`/crew/${getFormattedImageName(exec.name)}.jpg`} 
+                    alt={exec.name} 
+                    className="w-full h-full object-cover absolute inset-0"
+                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} // Hides broken image icon if no image exists
+                  />
+                </div>
                 <h3 className="font-semibold text-sm">{exec.name}</h3>
                 <p className="text-xs text-blue-400 mt-1">{exec.role.replace("Executive ", "")}</p>
               </div>
@@ -120,6 +129,14 @@ export default function GalleryPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {teamMembers.map((member) => (
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-lg p-4 text-center`}>
+                    <div className="w-20 h-20 bg-gray-900 mx-auto mb-3 rounded-lg overflow-hidden border border-gray-800 relative">
+                      <img 
+                        src={`/crew/${getFormattedImageName(member.name)}.jpg`} 
+                        alt={member.name} 
+                        className="w-full h-full object-cover absolute inset-0"
+                        onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                      />
+                    </div>
                     <h3 className="font-semibold text-sm">{member.name}</h3>
                     <p className="text-xs text-gray-500 mt-1">{member.role}</p>
                   </div>
