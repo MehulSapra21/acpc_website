@@ -11,7 +11,9 @@ export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Timeline State
+  // ==========================================
+  // TIMELINE STATE
+  // ==========================================
   const [events, setEvents] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
@@ -19,12 +21,15 @@ export default function AdminPage() {
   const [externalLink, setExternalLink] = useState("");
   const [isPast, setIsPast] = useState(false);
 
-  // Cropper State
+  // ==========================================
+  // CROPPER STATE
+  // ==========================================
   const [members, setMembers] = useState<any[]>([]);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedArea, setCroppedArea] = useState<any>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem("acpc_role") === "admin") {
@@ -36,15 +41,13 @@ export default function AdminPage() {
     }
   }, []);
 
+  // ==========================================
+  // TIMELINE LOGIC
+  // ==========================================
   const fetchEvents = async () => {
     const { data } = await supabase.from("events").select("*").order("event_date", { ascending: false });
     if (data) setEvents(data);
     setLoading(false);
-  };
-
-  const fetchMembers = async () => {
-    const { data } = await supabase.from("members").select("*");
-    if (data) setMembers(data);
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -92,6 +95,14 @@ export default function AdminPage() {
     }
   };
 
+  // ==========================================
+  // CROPPER LOGIC
+  // ==========================================
+  const fetchMembers = async () => {
+    const { data } = await supabase.from("members").select("*");
+    if (data) setMembers(data);
+  };
+
   const getFormattedImageName = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '_');
   };
@@ -102,40 +113,46 @@ export default function AdminPage() {
       setSelectedMember(member);
       setImageSrc(`/crew/${getFormattedImageName(member.name)}.jpeg`);
       
+      // Restore previous drag state
       setCrop({ 
-        x: member.crop_x ? (50 - member.crop_x) * zoom * -1 : 0, 
-        y: member.crop_y ? (50 - member.crop_y) * zoom * -1 : 0 
+        x: member.crop_x ?? 0, 
+        y: member.crop_y ?? 0 
       });
       setZoom(member.crop_zoom || 1);
     }
   };
 
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {}, []);
+  const onCropComplete = useCallback((croppedAreaPercentage: any, croppedAreaPixels: any) => {
+    setCroppedArea(croppedAreaPercentage);
+  }, []);
 
   const handleSaveCrop = async () => {
-    if (!selectedMember) return;
-
-    // Fixed math for accurate object-position mapping
-    const percentageX = 50 - (crop.x / zoom);
-    const percentageY = 50 - (crop.y / zoom);
+    if (!selectedMember || !croppedArea) return;
 
     const { error } = await supabase
       .from("members")
       .update({ 
-        crop_x: percentageX, 
-        crop_y: percentageY, 
-        crop_zoom: zoom 
+        crop_x: crop.x, // Raw X for admin panel memory
+        crop_y: crop.y, // Raw Y for admin panel memory
+        crop_zoom: zoom,
+        crop_area_x: croppedArea.x, // Exact percentages for gallery math
+        crop_area_y: croppedArea.y,
+        crop_area_width: croppedArea.width,
+        crop_area_height: croppedArea.height
       })
       .eq("id", selectedMember.id);
 
     if (!error) {
       alert("Crop settings saved! Go to the Gallery tab to see the update.");
-      fetchMembers();
+      fetchMembers(); // Refresh state so next load has latest data
     } else {
       alert("Error saving crop settings.");
     }
   };
 
+  // ==========================================
+  // RENDER
+  // ==========================================
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Verifying credentials...</div>;
 
   if (!isAdmin) {
@@ -160,7 +177,7 @@ export default function AdminPage() {
 
       <main className="max-w-4xl mx-auto px-6 py-12 space-y-24">
         
-        {/* Timeline Management Section */}
+        {/* SECTION 1: TIMELINE MANAGEMENT */}
         <section>
           <h1 className="text-3xl font-bold mb-8">Timeline Management</h1>
 
@@ -232,7 +249,7 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* Profile Image Alignment Section */}
+        {/* SECTION 2: PROFILE IMAGE ALIGNMENT */}
         <section>
           <h1 className="text-3xl font-bold mb-8 border-t border-gray-800 pt-12">Profile Image Alignment</h1>
 

@@ -15,6 +15,10 @@ type Member = {
   crop_x?: number;
   crop_y?: number;
   crop_zoom?: number;
+  crop_area_x?: number;
+  crop_area_y?: number;
+  crop_area_width?: number;
+  crop_area_height?: number;
 };
 
 export default function GalleryPage() {
@@ -34,7 +38,7 @@ export default function GalleryPage() {
     const refreshData = () => fetchMembers();
     window.addEventListener("focus", refreshData);
     
-    // Proper cleanup to fix your Vercel error
+    // Proper cleanup to prevent Vercel build errors and memory leaks
     return () => {
       window.removeEventListener("focus", refreshData);
     };
@@ -113,17 +117,28 @@ export default function GalleryPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {executives.map((exec) => (
               <div key={exec.id} className="bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden text-center hover:border-blue-500/50 transition-colors flex flex-col">
-                <div className="w-full aspect-square bg-gray-800 relative">
-                  <img 
-                    src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
-                    alt={exec.name} 
-                    className="w-full h-full absolute inset-0 object-cover"
-                    style={{
-                      objectPosition: `${exec.crop_x ?? 50}% ${exec.crop_y ?? 50}%`,
-                      transform: `scale(${exec.crop_zoom ?? 1})`
-                    }}
-                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
-                  />
+                <div className="w-full aspect-square bg-gray-800 relative overflow-hidden">
+                  {exec.crop_area_width ? (
+                    <img 
+                      src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
+                      alt={exec.name} 
+                      className="absolute max-w-none"
+                      style={{
+                        width: `${(100 / exec.crop_area_width) * 100}%`,
+                        height: `${(100 / exec.crop_area_height!) * 100}%`,
+                        left: `-${(exec.crop_area_x! / exec.crop_area_width) * 100}%`,
+                        top: `-${(exec.crop_area_y! / exec.crop_area_height!) * 100}%`
+                      }}
+                      onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
+                    />
+                  ) : (
+                    <img 
+                      src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
+                      alt={exec.name} 
+                      className="w-full h-full absolute inset-0 object-cover"
+                      onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
+                    />
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-sm">{exec.name}</h3>
@@ -144,17 +159,28 @@ export default function GalleryPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {teamMembers.map((member) => (
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
-                    <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800">
-                      <img 
-                        src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
-                        alt={member.name} 
-                        className="w-full h-full absolute inset-0 object-cover"
-                        style={{
-                          objectPosition: `${member.crop_x ?? 50}% ${member.crop_y ?? 50}%`,
-                          transform: `scale(${member.crop_zoom ?? 1})`
-                        }}
-                        onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-                      />
+                    <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800 overflow-hidden">
+                      {member.crop_area_width ? (
+                        <img 
+                          src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
+                          alt={member.name} 
+                          className="absolute max-w-none"
+                          style={{
+                            width: `${(100 / member.crop_area_width) * 100}%`,
+                            height: `${(100 / member.crop_area_height!) * 100}%`,
+                            left: `-${(member.crop_area_x! / member.crop_area_width) * 100}%`,
+                            top: `-${(member.crop_area_y! / member.crop_area_height!) * 100}%`
+                          }}
+                          onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                        />
+                      ) : (
+                        <img 
+                          src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
+                          alt={member.name} 
+                          className="w-full h-full absolute inset-0 object-cover"
+                          onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                        />
+                      )}
                     </div>
                     <div className="p-3">
                       <h3 className="font-semibold text-sm">{member.name}</h3>
