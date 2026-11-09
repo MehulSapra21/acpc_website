@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Terminal, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +9,13 @@ import { supabase } from "@/lib/supabase";
 export default function RecruitmentPage() {
   const [formData, setFormData] = useState({ full_name: "", email: "", phone: "", why_join: "" });
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("acpc_role") === "admin") {
+      setIsAdmin(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,12 +34,27 @@ export default function RecruitmentPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30 pb-20">
-      <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2">
+      
+      <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50 bg-[#0a0a0a]/80">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center relative">
+          <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2 z-10">
             <Terminal className="text-blue-500" size={24} />
             <span>ACPC.</span>
           </Link>
+          
+          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <Link href="/#timeline" className="hover:text-white transition-colors">Timeline</Link>
+            <Link href="/gallery" className="hover:text-white transition-colors">Crew & Gallery</Link>
+            <Link href="/leetcode" className="hover:text-white transition-colors">POTD</Link>
+            {isAdmin && (
+              <Link href="/admin" className="hover:text-red-400 transition-colors text-red-500">Admin Panel</Link>
+            )}
+          </div>
+
+          <div className="hidden md:flex z-10">
+            <Link href="/recruitment" className="text-white transition-colors font-medium">Join Us</Link>
+          </div>
         </div>
       </nav>
 
