@@ -6,12 +6,16 @@ import { Terminal, ShieldAlert, Plus, Award } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+// 1. Updated Type to include crop data
 type Member = {
   id: string;
   name: string;
   role: string;
   team: string;
   points: number;
+  crop_x?: number;
+  crop_y?: number;
+  crop_zoom?: number;
 };
 
 export default function GalleryPage() {
@@ -111,7 +115,7 @@ export default function GalleryPage() {
                       objectPosition: `${exec.crop_x ?? 50}% ${exec.crop_y ?? 50}%`,
                       transform: `scale(${exec.crop_zoom ?? 1})`
                     }}
-                    onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
                   />
                 </div>
                 <div className="p-4">
@@ -135,13 +139,14 @@ export default function GalleryPage() {
                 {teamMembers.map((member) => (
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
                     <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800">
+                      {/* 2. Fixed variable name from 'exec' to 'member' here */}
                       <img 
-                        src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
-                        alt={exec.name} 
+                        src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
+                        alt={member.name} 
                         className="w-full h-full absolute inset-0 object-cover"
                         style={{
-                          objectPosition: `${exec.crop_x ?? 50}% ${exec.crop_y ?? 50}%`,
-                          transform: `scale(${exec.crop_zoom ?? 1})`
+                          objectPosition: `${member.crop_x ?? 50}% ${member.crop_y ?? 50}%`,
+                          transform: `scale(${member.crop_zoom ?? 1})`
                         }}
                         onError={(e) => { e.currentTarget.style.opacity = '0'; }}
                       />
