@@ -15,8 +15,13 @@ type Event = {
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Check if user has admin privileges
+    if (sessionStorage.getItem("acpc_role") === "admin") {
+      setIsAdmin(true);
+    }
     fetchEvents();
   }, []);
 
@@ -47,7 +52,9 @@ export default function Home() {
             <Link href="#timeline" className="hover:text-white transition-colors">Timeline</Link>
             <Link href="/gallery" className="hover:text-white transition-colors">Crew & Gallery</Link>
             <Link href="/leetcode" className="hover:text-white transition-colors">POTD</Link>
-            <Link href="/admin" className="hover:text-red-400 transition-colors text-red-500">Admin Panel</Link>
+            {isAdmin && (
+              <Link href="/admin" className="hover:text-red-400 transition-colors text-red-500">Admin Panel</Link>
+            )}
           </div>
 
           <div className="hidden md:flex">
