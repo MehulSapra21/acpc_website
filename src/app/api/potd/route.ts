@@ -8,36 +8,42 @@ export async function GET() {
   );
 
   try {
-    // 1. Safely check for the last posted question without crashing if empty
     const { data: lastPotd, error: fetchError } = await supabase
       .from("leetcode_potd")
       .select("question_id")
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle(); // FIX: Safely handles 0 rows!
+      .maybeSingle(); 
 
     if (fetchError) throw new Error(`Fetch error: ${fetchError.message}`);
 
-    let nextId = 100; // Start at 100 if table is empty
+    let nextId = 100; 
     if (lastPotd && lastPotd.question_id) {
       nextId = lastPotd.question_id + 1;
     }
 
-    // 2. Fetch the master list of all LeetCode algorithms
-    const response = await fetch("https://leetcode.com/api/problems/algorithms/");
-    if (!response.ok) throw new Error("Failed to reach LeetCode servers.");
+    // Pass standard browser headers to bypass LeetCode's bot protection
+    const response = await fetch("https://leetcode.com/api/problems/algorithms/", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "application/json"
+      },
+      cache: "no-store" // Prevent Vercel from caching failures
+    });
+
+    if (!response.ok) throw new Error(`Failed to reach LeetCode servers. Status: ${response.status}`);
+    
     const leetcodeData = await response.json();
     
-    // 3. Find the next valid question
     let question = null;
     while (!question && nextId < 4000) {
       question = leetcodeData.stat_status_pairs.find((q: any) => q.stat.frontend_question_id === nextId);
-      if (!question) nextId++; // Skip missing IDs
+      if (!question) nextId++; 
     }
 
     if (!question) throw new Error("No more valid questions found on LeetCode.");
 
-    // 4. Extract data
     const title = question.stat.question__title;
     const slug = question.stat.question__title_slug;
     const url = `https://leetcode.com/problems/${slug}/`;
@@ -46,7 +52,6 @@ export async function GET() {
     const difficulty = difficultyMap[question.difficulty.level] || "Unknown";
     const today = new Date().toISOString().split('T')[0];
 
-    // 5. Save to Supabase
     const { error: insertError } = await supabase
       .from("leetcode_potd")
       .insert([{
@@ -63,7 +68,6 @@ export async function GET() {
 
   } catch (error: any) {
     console.error(error);
-    // This will now print the EXACT reason it failed to the screen!
     return NextResponse.json({ error: error.message || "Failed to generate POTD" }, { status: 500 });
   }
 }
