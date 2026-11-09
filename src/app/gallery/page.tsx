@@ -106,8 +106,12 @@ export default function GalleryPage() {
                   <img 
                     src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
                     alt={exec.name} 
-                    className="w-full h-full object-cover absolute inset-0"
-                    onError={(e) => { e.currentTarget.style.opacity = '0'; }} 
+                    className="w-full h-full absolute inset-0 object-cover"
+                    style={{
+                      objectPosition: `${exec.crop_x ?? 50}% ${exec.crop_y ?? 50}%`,
+                      transform: `scale(${exec.crop_zoom ?? 1})`
+                    }}
+                    onError={(e) => { e.currentTarget.style.opacity = '0'; }}
                   />
                 </div>
                 <div className="p-4">
@@ -132,9 +136,13 @@ export default function GalleryPage() {
                   <div key={member.id} className={`bg-black border ${member.role === 'Head' ? 'border-blue-500/30' : 'border-gray-800'} rounded-xl overflow-hidden text-center flex flex-col`}>
                     <div className="w-full aspect-square bg-gray-900 relative border-b border-gray-800">
                       <img 
-                        src={`/crew/${getFormattedImageName(member.name)}.jpeg`} 
-                        alt={member.name} 
-                        className="w-full h-full object-cover absolute inset-0"
+                        src={`/crew/${getFormattedImageName(exec.name)}.jpeg`} 
+                        alt={exec.name} 
+                        className="w-full h-full absolute inset-0 object-cover"
+                        style={{
+                          objectPosition: `${exec.crop_x ?? 50}% ${exec.crop_y ?? 50}%`,
+                          transform: `scale(${exec.crop_zoom ?? 1})`
+                        }}
                         onError={(e) => { e.currentTarget.style.opacity = '0'; }}
                       />
                     </div>
