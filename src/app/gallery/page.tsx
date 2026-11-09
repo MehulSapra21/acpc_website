@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Terminal, ShieldAlert, Plus, Award } from "lucide-react";
+import { Terminal } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -47,13 +46,6 @@ export default function GalleryPage() {
       setMembers(data);
     }
     setLoading(false);
-  };
-
-  const addPoint = async (id: string, currentPoints: number) => {
-    setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, points: currentPoints + 10 } : m))
-    );
-    await supabase.from("members").update({ points: currentPoints + 10 }).eq("id", id);
   };
 
   const getFormattedImageName = (name: string) => {
@@ -122,7 +114,7 @@ export default function GalleryPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30 pb-20">
       
-      {/* UPDATED NAVIGATION BAR */}
+      {/* UNIVERSAL NAVIGATION BAR */}
       <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50 bg-[#0a0a0a]/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center relative">
           <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2 z-10">
@@ -131,7 +123,6 @@ export default function GalleryPage() {
           </Link>
           
           <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
-            {/* Added Home Link Here */}
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/#timeline" className="hover:text-white transition-colors">Timeline</Link>
             <Link href="/gallery" className="text-white transition-colors">Crew & Gallery</Link>
@@ -148,31 +139,6 @@ export default function GalleryPage() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-6 mt-12">
-        {isAdmin && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-20 bg-gray-900/50 border border-green-500/30 rounded-xl p-8">
-            <div className="flex items-center gap-2 mb-6">
-              <ShieldAlert className="text-green-500" size={24} />
-              <h2 className="text-2xl font-bold text-green-500">Admin Leaderboard Control</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...members].sort((a, b) => b.points - a.points).map((member) => (
-                <div key={member.id} className="flex justify-between items-center bg-black border border-gray-800 p-4 rounded-lg">
-                  <div>
-                    <p className="font-semibold text-sm">{member.name}</p>
-                    <p className="text-xs text-gray-500">{member.team} | <Award size={12} className="inline text-yellow-500"/> {member.points} pts</p>
-                  </div>
-                  <button 
-                    onClick={() => addPoint(member.id, member.points)}
-                    className="bg-gray-800 hover:bg-gray-700 text-green-400 p-2 rounded-md transition-colors"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">The Crew</h1>
           <p className="text-gray-400">The minds executing brilliance behind ACPC.</p>
