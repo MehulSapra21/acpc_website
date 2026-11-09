@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ShieldAlert, Plus, Trash2, Home, Link as LinkIcon } from "lucide-react";
+import { ShieldAlert, Plus, Trash2, Home, Link as LinkIcon, Pencil, X } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [events, setEvents] = useState<any[]>([]);
   
   // Form State
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [externalLink, setExternalLink] = useState("");
@@ -32,27 +33,54 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const handleAddEvent = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.from("events").insert([{ 
+    
+    const payload = {
       title, 
       event_date: date, 
       is_past_event: isPast,
       external_link: externalLink.trim() === "" ? null : externalLink.trim()
-    }]);
-    
-    if (!error) {
-      setTitle("");
-      setDate("");
-      setExternalLink("");
-      setIsPast(false);
-      fetchEvents(); // Refresh the list
+    };
+
+    if (editingId) {
+      // Update existing event
+      const { error } = await supabase.from("events").update(payload).eq("id", editingId);
+      if (!error) resetForm();
+    } else {
+      // Create new event
+      const { error } = await supabase.from("events").insert([payload]);
+      if (!error) resetForm();
     }
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    await supabase.from("events").delete().eq("id", id);
+  const resetForm = () => {
+    setEditingId(null);
+    setTitle("");
+    setDate("");
+    setExternalLink("");
+    setIsPast(false);
     fetchEvents();
+  };
+
+  const handleEditClick = (event: any) => {
+    setEditingId(event.id);
+    setTitle(event.title);
+    setDate(event.event_date);
+    setExternalLink(event.external_link || "");
+    setIsPast(event.is_past_event);
+    
+    // Scroll to top so the admin sees the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this operation?");
+    if (confirmDelete) {
+      await supabase.from("events").delete().eq("id", id);
+      if (editingId === id) resetForm();
+      else fetchEvents();
+    }
   };
 
   if (loading) return <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">Verifying credentials...</div>;
@@ -80,11 +108,22 @@ export default function AdminPage() {
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold mb-8">Timeline Management</h1>
 
-        {/* Add Event Form */}
+        {/* Add/Edit Event Form */}
         <motion.form 
-          onSubmit={handleAddEvent}
-          className="bg-gray-900/50 border border-gray-800 p-6 rounded-xl mb-12 flex flex-col gap-4"
+          onSubmit={handleFormSubmit}
+          className={`bg-gray-900/50 border ${editingId ? 'border-blue-500' : 'border-gray-800'} p-6 rounded-xl mb-12 flex flex-col gap-4 transition-colors`}
         >
+          <div className="flex justify-between items-center mb-2">
+            <h2 className={`font-bold ${editingId ? 'text-blue-400' : 'text-gray-300'}`}>
+              {editingId ? 'Edit Operation' : 'Create New Operation'}
+            </h2>
+            {editingId && (
+              <button type="button" onClick={resetForm} className="text-gray-400 hover:text-white flex items-center gap-1 text-sm">
+                <X size={16} /> Cancel Edit
+              </button>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             <div className="space-y-2">
               <label className="text-xs text-gray-400">Operation Title</label>
@@ -107,8 +146,9 @@ export default function AdminPage() {
               <label htmlFor="past" className="text-sm">Past Event?</label>
             </div>
 
-            <button type="submit" className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors">
-              <Plus size={18} /> Add
+            <button type="submit" className={`${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'} px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-colors`}>
+              {editingId ? <Pencil size={18} /> : <Plus size={18} />} 
+              {editingId ? 'Update' : 'Add'}
             </button>
           </div>
         </motion.form>
@@ -117,7 +157,7 @@ export default function AdminPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-bold mb-4 border-b border-gray-800 pb-2">Current Operations</h2>
           {events.map((event) => (
-            <div key={event.id} className="flex justify-between items-center bg-black border border-gray-800 p-4 rounded-lg">
+            <div key={event.id} className={`flex justify-between items-center bg-black border ${editingId === event.id ? 'border-blue-500/50' : 'border-gray-800'} p-4 rounded-lg`}>
               <div>
                 <h3 className="font-semibold flex items-center gap-2">
                   {event.title} 
@@ -125,9 +165,14 @@ export default function AdminPage() {
                 </h3>
                 <p className="text-xs text-gray-500">{event.event_date} • {event.is_past_event ? 'Past' : 'Upcoming'}</p>
               </div>
-              <button onClick={() => handleDeleteEvent(event.id)} className="text-gray-500 hover:text-red-500 transition-colors">
-                <Trash2 size={20} />
-              </button>
+              <div className="flex items-center gap-4">
+                <button onClick={() => handleEditClick(event)} className="text-gray-500 hover:text-blue-400 transition-colors" title="Edit Event">
+                  <Pencil size={18} />
+                </button>
+                <button onClick={() => handleDeleteEvent(event.id)} className="text-gray-500 hover:text-red-500 transition-colors" title="Delete Event">
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
