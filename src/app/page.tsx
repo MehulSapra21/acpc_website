@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Terminal, Calendar, ChevronRight, ExternalLink } from "lucide-react";
+import { Calendar, ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import Navbar from "@/components/Navbar";
 
 type Event = {
   id: string;
@@ -16,12 +17,8 @@ type Event = {
 
 export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem("acpc_role") === "admin") {
-      setIsAdmin(true);
-    }
     fetchEvents();
   }, []);
 
@@ -39,27 +36,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-[#ededed] font-sans selection:bg-blue-500/30">
       
-      <nav className="border-b border-gray-800/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="font-bold text-xl tracking-tighter flex items-center gap-2">
-            <Terminal className="text-blue-500" size={24} />
-            <span>ACPC.</span>
-          </Link>
-          
-          <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex gap-8 text-sm text-gray-400">
-            <Link href="#timeline" className="hover:text-white transition-colors">Timeline</Link>
-            <Link href="/gallery" className="hover:text-white transition-colors">Crew & Gallery</Link>
-            <Link href="/leetcode" className="hover:text-white transition-colors">POTD</Link>
-            {isAdmin && (
-              <Link href="/admin" className="hover:text-red-400 transition-colors text-red-500">Admin Panel</Link>
-            )}
-          </div>
-
-          <div className="hidden md:flex">
-            <Link href="/recruitment" className="hover:text-blue-400 transition-colors text-blue-500 font-medium">Join Us</Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="max-w-6xl mx-auto px-6 py-24">
         <motion.div 
