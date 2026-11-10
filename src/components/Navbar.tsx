@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Terminal, Menu, X, Instagram } from "lucide-react";
+import { Terminal, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -29,6 +29,15 @@ const LinkedInIcon = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
+// Custom SVG for Instagram
+const InstagramIcon = ({ size = 20 }: { size?: number }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
+
 export default function Navbar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,7 +58,7 @@ export default function Navbar() {
 
   const socialLinks = [
     { name: "WhatsApp", url: "https://chat.whatsapp.com/Bl5ImRHTyPR945bWfizvEL", icon: <WhatsAppIcon size={20} />, hover: "hover:text-green-500" },
-    { name: "Instagram", url: "https://www.instagram.com/acpc_amity", icon: <Instagram size={20} />, hover: "hover:text-pink-500" },
+    { name: "Instagram", url: "https://www.instagram.com/acpc_amity", icon: <InstagramIcon size={20} />, hover: "hover:text-pink-500" },
     { name: "X", url: "https://x.com/AcpcMail31881", icon: <XLogo size={18} />, hover: "hover:text-white" },
     { name: "LinkedIn", url: "http://linkedin.com/company/amity-competitive-programming-club/", icon: <LinkedInIcon size={20} />, hover: "hover:text-blue-500" }
   ];
